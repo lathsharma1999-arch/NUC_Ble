@@ -1,6 +1,6 @@
 name: "NUC_Ble"
 description: "Nuc_ble"
-url: https://github.com/fl4p/batmon-ha
+url: https://github.com/lathsharma1999-arch/NUC_Ble
 version: "1.93"
 slug: "batmon"
 init: false

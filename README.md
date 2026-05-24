@@ -1,3 +1,2 @@
-# BatMon - Local Addon Backup
-Personal backup of BatMon addon source.
-Original: https://github.com/fl4p/home-assistant-addons
+# NUC_Ble
+BLE BMS Monitor Addon for Home Assistant.
