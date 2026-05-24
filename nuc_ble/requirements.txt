@@ -1,0 +1,17 @@
+
+bleak==2.0.0 # see Dockerfile
+#      ^ https://github.com/fl4p/batmon-ha/issues/275
+#bleak-retry-connector
+
+paho-mqtt==2.1.0
+backoff
+crcmod
+
+pyserial
+
+
+#influxdb # see Dockerfile
+# the influxdb package appears to be not available from some platforms, so install it only if needed
+# see https://github.com/fl4p/batmon-ha/issues/147 (rpi 3)
+
+# aiobmsble  # see Dockerfile
