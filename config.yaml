@@ -1,6 +1,5 @@
 name: "NUC_Ble"
-description: "Nuc_ble"
-url: https://github.com/lathsharma1999-arch/NUC_Ble
+description: "JK BMS (Read & Write)"
 version: "1.93"
 slug: "batmon"
 init: false
