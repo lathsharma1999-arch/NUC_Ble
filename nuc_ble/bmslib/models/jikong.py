@@ -31,7 +31,11 @@ def calc_crc(message_bytes):
 
 
 def read_str(buf, offset, encoding='utf-8'):
-    return buf[offset:buf.index(0x00, offset)].decode(encoding=encoding)
+    try:
+        end = buf.index(0x00, offset)
+    except ValueError:
+        end = len(buf)
+    return buf[offset:end].decode(encoding=encoding, errors='ignore').strip()
 
 
 def _jk_command(address, value: list = ()):
