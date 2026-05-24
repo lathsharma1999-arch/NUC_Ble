@@ -469,6 +469,30 @@ class BmsSampler:
                 mqtt_single_out(self.mqtt_client, 'BMS_1/state/fw', di.hw_version or '', retain=True)
                 mqtt_single_out(self.mqtt_client, 'BMS_1/state/sw', di.sw_version or '', retain=True)
                 mqtt_single_out(self.mqtt_client, 'BMS_1/state/brand', di.name or '', retain=True)
+                # Extra fields from raw buffer
+                try:
+                    logger.info('resp_table keys: %s', list(self.bms._resp_table.keys()))
+                    buf, _ = self.bms._resp_table[0x03]
+                    def _read_str(b, o):
+                        try:
+                            e = b.index(0x00, o)
+                        except ValueError:
+                            e = len(b)
+                        return b[o:e].decode('utf-8', errors='ignore').strip()
+                    def _u32(b, i):
+                        return int.from_bytes(b[i:i+4], byteorder='little', signed=False)
+                    mqtt_single_out(self.mqtt_client, 'BMS_1/state/manufacturing_date', _read_str(buf, 78), retain=True)
+                    mqtt_single_out(self.mqtt_client, 'BMS_1/state/uptime', str(_u32(buf, 162)), retain=True)
+                    mqtt_single_out(self.mqtt_client, 'BMS_1/state/power_count', str(_u32(buf, 158)), retain=True)
+                    mqtt_single_out(self.mqtt_client, 'BMS_1/state/can_protocol_number', str(buf[166]), retain=True)
+                    mqtt_single_out(self.mqtt_client, 'BMS_1/state/uart1_protocol_number', str(buf[167]), retain=True)
+                    mqtt_single_out(self.mqtt_client, 'BMS_1/state/lcd_buzzer_trigger', str(buf[172]), retain=True)
+                    mqtt_single_out(self.mqtt_client, 'BMS_1/state/lcd_buzzer_trigger_value', str(_u32(buf, 176)), retain=True)
+                    mqtt_single_out(self.mqtt_client, 'BMS_1/state/lcd_buzzer_release_value', str(_u32(buf, 180)), retain=True)
+                    mqtt_single_out(self.mqtt_client, 'BMS_1/state/request_charge_voltage_time', str(buf[184]), retain=True)
+                    mqtt_single_out(self.mqtt_client, 'BMS_1/state/request_float_voltage_time', str(buf[185]), retain=True)
+                except Exception as ex:
+                    logger.warning('Error publishing extra device info: %s %s', type(ex).__name__, ex)
                 logger.info('Published device info OK')
             else:
                 logger.warning('Cannot publish device info: mqtt_client=%s di=%s', self.mqtt_client, di)
