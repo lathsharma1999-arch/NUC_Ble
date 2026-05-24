@@ -384,6 +384,34 @@ class BmsSampler:
                 except Exception as e:
                     logger.warning("fetch_cell_resistances failed: %s", e)
 
+                # === JK Extra: actual FET states + per-cell balance ===
+                try:
+                    from bmslib.models.jikong import JKBt
+                    if isinstance(bms, JKBt) and 0x02 in bms._resp_table:
+                        jk_buf, _ = bms._resp_table[0x02]
+                        fw_off = 32 if bms.is_new_11fw_32s else 0
+
+                        # Actual HW FET states (differs from switches when protection trips)
+                        mqtt_single_out(mqtt_client,
+                            f"{self.mqtt_topic_prefix}/charge_fet_actual",
+                            'ON' if jk_buf[166 + fw_off] else 'OFF')
+                        mqtt_single_out(mqtt_client,
+                            f"{self.mqtt_topic_prefix}/discharge_fet_actual",
+                            'ON' if jk_buf[167 + fw_off] else 'OFF')
+
+                        # Per-cell balance status (bitmask at buf[34:36])
+                        n_cells = bms.num_cells or 16
+                        bal_bits = jk_buf[34] | (jk_buf[35] << 8)
+                        for i in range(n_cells):
+                            mqtt_single_out(mqtt_client,
+                                f"{self.mqtt_topic_prefix}/cell_balance/{i + 1}",
+                                'ON' if (bal_bits >> i) & 1 else 'OFF')
+                        mqtt_single_out(mqtt_client,
+                            f"{self.mqtt_topic_prefix}/cell_balance/any",
+                            'ON' if bal_bits else 'OFF')
+                except Exception as e:
+                    logger.warning("extra JK data failed: %s", e)
+
                 # temperatures = None
                 if self.period_30s or self.period_discov:
                     if not sample.temperatures:
