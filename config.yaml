@@ -1,5 +1,5 @@
-name: "Batmon"
-description: "Monitor various BMS over bluetooth"
+name: "NUC_Ble"
+description: "Nuc_ble"
 url: https://github.com/fl4p/batmon-ha
 version: "1.93"
 slug: "batmon"
