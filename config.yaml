@@ -1,0 +1,104 @@
+name: "Batmon"
+description: "Monitor various BMS over bluetooth"
+url: https://github.com/fl4p/batmon-ha
+version: "1.93"
+slug: "batmon"
+init: false
+host_dbus: true
+apparmor: true
+
+# Runtime access for the non-D-Bus BLE stacks (ble_stack: bumble | bluek):
+#  - host_network: REQUIRED. AF_BLUETOOTH/HCI/L2CAP sockets are bound to the host
+#    network namespace; without it the container gets EAFNOSUPPORT. (Verified in
+#    an addon container: the supervisor/core API and MQTT still work with it on.)
+#  - privileged NET_ADMIN (mgmt control channel / HCI User Channel) and
+#    NET_RAW (raw HCI + L2CAP sockets).
+# All harmless when ble_stack: bleak (default); host_dbus stays for the BlueZ
+# pairing pre-step (and bluek's bluetoothctl pairing). NOTE: "bumble" takes the
+# adapter EXCLUSIVELY (brings it down), removing it from the HA Bluetooth pool —
+# dedicate an adapter to it. "bluek" talks to the kernel BlueZ stack over
+# sockets and does NOT take the adapter down, so it coexists with bluetoothd/HA.
+host_network: true
+privileged:
+  - NET_ADMIN
+  - NET_RAW
+
+homeassistant_api: true # http://supervisor/core/api
+hassio_api: true        # http://supervisor
+
+# watchdog: true # todo  https://developers.home-assistant.io/docs/add-ons/configuration/
+
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
+
+services:
+  - mqtt:need
+
+discovery:
+  - mqtt
+
+
+options:
+  devices:
+    - address: C8:47:80:47:D1:77
+      type: jk
+      alias: b1
+  concurrent_sampling: false
+  keep_alive: true
+  verbose_log: false
+  sample_period: 0.0
+  publish_period: 0.0
+  invert_current: true
+  watchdog: false
+  expire_values_after: 60
+  bt_power_cycle: false
+  ble_stack: bleak
+
+schema:
+  devices:
+    - alias: "str?"
+      address: str
+      type: str
+      debug: "bool?"
+      pin: "str?"
+      adapter: "str?"
+      algorithm: "str?"
+      current_calibration: "float?"
+
+  mqtt_user: "str?"
+  mqtt_password: "str?"
+  mqtt_broker: "str?"
+  mqtt_port: "int(1,65535)?"
+
+  concurrent_sampling: "bool"
+  invert_current: "bool"
+  keep_alive: "bool"
+  watchdog: "bool"
+
+  sample_period: "float"
+  publish_period: "float?"
+  expire_values_after: "float"
+
+  verbose_log: "bool"
+
+  bt_power_cycle: "bool?"
+
+  # "bleak" = stock BlueZ/D-Bus stack (default); "bumble" = bumble-bleak
+  # (pure-Python HCI, no BlueZ/D-Bus) which takes exclusive ownership of the
+  # adapter(s) it uses (brings them down), so they leave the HA Bluetooth pool;
+  # "bluek" talks to the kernel BlueZ stack over L2CAP/mgmt sockets (no D-Bus)
+  # and coexists with bluetoothd — the adapter stays in the HA pool.
+  ble_stack: "list(bleak|bumble|bluek)?"
+
+  influxdb_host: "str?"
+  influxdb_username: "str?"
+  influxdb_password: "str?"
+  influxdb_ssl: "bool?"
+  influxdb_verify_ssl: "bool?"
+  influxdb_database: "str?"
+
+#  telemetry: "bool?"
