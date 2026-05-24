@@ -464,10 +464,14 @@ class BmsSampler:
             self.device_info = di
             if self.mqtt_client and di:
                 from bmslib.mqtt_util import mqtt_single_out
+                logger.info('Publishing device info to BMS_1/state/ topics: %s', di)
                 mqtt_single_out(self.mqtt_client, 'BMS_1/state/bms', di.model or '', retain=True)
                 mqtt_single_out(self.mqtt_client, 'BMS_1/state/fw', di.hw_version or '', retain=True)
                 mqtt_single_out(self.mqtt_client, 'BMS_1/state/sw', di.sw_version or '', retain=True)
                 mqtt_single_out(self.mqtt_client, 'BMS_1/state/brand', di.name or '', retain=True)
+                logger.info('Published device info OK')
+            else:
+                logger.warning('Cannot publish device info: mqtt_client=%s di=%s', self.mqtt_client, di)
         except NotImplementedError:
             pass
         except Exception as e:
